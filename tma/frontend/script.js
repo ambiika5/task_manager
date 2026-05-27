@@ -29,8 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
         nameGroup.style.display = isLogin ? 'none' : 'block';
     };
 
+    const startForFreeBtn = document.getElementById('startForFreeBtn');
+
     loginBtn.addEventListener('click', () => openModal('login'));
     signupBtn.addEventListener('click', () => openModal('signup'));
+
+    if (startForFreeBtn) {
+        startForFreeBtn.addEventListener('click', () => openModal('signup'));
+    }
+
     closeModal.addEventListener('click', () => authModal.style.display = 'none');
     
     toggleAuth.addEventListener('click', (e) => {
