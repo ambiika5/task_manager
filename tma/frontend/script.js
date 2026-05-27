@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const API_BASE = 'http://127.0.0.1:8000';
+    const API_BASE = 'https://task-manager-m4ls.onrender.com';
 
     const authModal = document.getElementById('authModal');
     const loginBtn = document.getElementById('loginBtn');
