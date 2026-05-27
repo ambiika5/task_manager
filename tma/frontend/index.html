@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Manage Your Tasks</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span>TaskFlow</span>
+                </div>
+                <div class="nav-links" id="navLinks">
+                    <button id="loginBtn" class="btn btn-ghost">Login</button>
+                    <button id="signupBtn" class="btn btn-primary">Get Started</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <header class="hero">
+            <div class="container">
+                <h1>Manage your tasks with <span class="text-gradient">clarity</span>.</h1>
+                <p>TaskFlow helps teams organize, track, and complete work beautifully. From simple to-dos to complex projects.</p>
+                <div class="hero-actions">
+                    <button class="btn btn-primary btn-lg">Start for free</button>
+                </div>
+            </div>
+            <div class="features-grid container">
+                <div class="feature-card">
+                    <div class="icon">📋</div>
+                    <h3>Visual Boards</h3>
+                    <p>Organize tasks in a clear, customizable board format.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">⚡</div>
+                    <h3>Real-time</h3>
+                    <p>Collaborate seamlessly with your team instantly.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">✅</div>
+                    <h3>Track Progress</h3>
+                    <p>Keep an eye on what's done and what needs attention.</p>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Login</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="authForm">
+                <div class="form-group" id="nameGroup" style="display: none;">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="email@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="authSubmitBtn">Login</button>
+                <p class="auth-switch">
+                    <span id="switchText">Don't have an account?</span>
+                    <a href="#" id="toggleAuth">Sign Up</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

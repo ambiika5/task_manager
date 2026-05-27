@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - TaskFlow</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Dashboard page overrides */
+        :root {
+            --dashboard-bg: #f8fafc;
+            --dashboard-column-bg: #f1f5f9;
+            --dashboard-card-bg: #ffffff;
+        }
+
+        body {
+            background: var(--dashboard-bg) !important;
+        }
+
+        .dashboard-header {
+            background: #ffffff !important;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Buttons inside cards */
+        .task-card .btn {
+            font-size: 0.85rem;
+            border-radius: 10px;
+        }
+
+        /* Modal centering */
+        .modal-content {
+            max-width: 520px;
+        }
+
+        .dashboard-header {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .board-container {
+            padding: 32px;
+            display: flex;
+            gap: 24px;
+            overflow-x: auto;
+            min-height: calc(100vh - 73px);
+        }
+        .column {
+            flex: 0 0 350px;
+            background: #f1f5f9;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-column: column;
+            gap: 16px;
+        }
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 0 8px;
+        }
+        .column-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #475569;
+        }
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 100px;
+        }
+        .task-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .task-card h4 {
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        .task-card p {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .priority-high { background: #fee2e2; color: #ef4444; }
+        .priority-medium { background: #ffedd5; color: #f97316; }
+        .priority-low { background: #dcfce7; color: #22c55e; }
+        
+        .add-task-btn {
+            width: 100%;
+            padding: 12px;
+            background: white;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            color: var(--muted);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .add-task-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body style="background: #f8fafc;">
+    <header class="dashboard-header">
+        <div class="logo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>TaskFlow</span>
+        </div>
+        <div class="user-actions" style="display: flex; gap: 16px; align-items: center;">
+            <span id="userName" style="font-weight: 600;">User</span>
+            <button id="logoutBtn" class="btn btn-ghost">Logout</button>
+        </div>
+    </header>
+
+    <main class="board-container">
+        <!-- TODO Column -->
+        <div class="column" id="todo-col">
+            <div class="column-header">
+                <span class="column-title">To Do</span>
+                <span class="badge" style="background: #e2e8f0; color: #64748b;">3</span>
+            </div>
+            <div class="task-list" id="todo-list"></div>
+            <button class="add-task-btn" onclick="openCreateModal('TODO')">+ Add Task</button>
+        </div>
+
+        <!-- PROGRESS Column -->
+        <div class="column" id="progress-col">
+            <div class="column-header">
+                <span class="column-title">In Progress</span>
+                <span class="badge" style="background: #e2e8f0; color: #64748b;">1</span>
+            </div>
+            <div class="task-list" id="progress-list"></div>
+            <button class="add-task-btn" onclick="openCreateModal('IN_PROGRESS')">+ Add Task</button>
+        </div>
+
+        <!-- DONE Column -->
+        <div class="column" id="done-col">
+            <div class="column-header">
+                <span class="column-title">Done</span>
+                <span class="badge" style="background: #e2e8f0; color: #64748b;">2</span>
+            </div>
+            <div class="task-list" id="done-list"></div>
+            <button class="add-task-btn" onclick="openCreateModal('DONE')">+ Add Task</button>
+        </div>
+    </main>
+
+    <!-- Create Task Modal -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>New Task</h2>
+                <button class="close-modal" id="closeTaskModal">&times;</button>
+            </div>
+            <form id="taskForm">
+                <input type="hidden" id="taskStatus" value="TODO">
+                <div class="form-group">
+                    <label for="taskTitle">Title</label>
+                    <input type="text" id="taskTitle" placeholder="What needs to be done?" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskDesc">Description</label>
+                    <textarea id="taskDesc" placeholder="Add details..." style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); min-height: 100px; font-family: inherit; font-size: 1rem;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="taskPriority">Priority</label>
+                    <select id="taskPriority" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: white;">
+                        <option value="LOW">Low</option>
+                        <option value="MEDIUM" selected>Medium</option>
+                        <option value="HIGH">High</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Create Task</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Basic Dashboard Script
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            if (!token || !user) {
+                window.location.href = '/index.html';
+                return;
+            }
+
+            document.getElementById('userName').textContent = user.name;
+
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                localStorage.clear();
+                window.location.href = '/index.html';
+            });
+
+            // Modal logic
+            const taskModal = document.getElementById('taskModal');
+            const closeTaskModal = document.getElementById('closeTaskModal');
+            
+            window.openCreateModal = (status) => {
+                document.getElementById('taskStatus').value = status;
+                taskModal.style.display = 'flex';
+            };
+
+            closeTaskModal.onclick = () => taskModal.style.display = 'none';
+
+            const API_BASE = 'http://127.0.0.1:8000';
+
+
+            const containers = {
+                'TODO': document.getElementById('todo-list'),
+                'IN_PROGRESS': document.getElementById('progress-list'),
+                'DONE': document.getElementById('done-list')
+            };
+
+            const columnBadges = {
+                'TODO': document.querySelector('#todo-col .column-header .badge'),
+                'IN_PROGRESS': document.querySelector('#progress-col .column-header .badge'),
+                'DONE': document.querySelector('#done-col .column-header .badge'),
+            };
+
+            const escapeHtml = (str) => String(str)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '<')
+                .replaceAll('>', '>')
+                .replaceAll('"', '"')
+                .replaceAll("'", '&#039;');
+
+
+            const renderTasks = (tasks) => {
+                Object.values(containers).forEach(c => c.innerHTML = '');
+
+                const byStatus = {
+                    'TODO': [],
+                    'IN_PROGRESS': [],
+                    'DONE': []
+                };
+
+                tasks.forEach(t => {
+                    if (byStatus[t.status]) byStatus[t.status].push(t);
+                });
+
+                for (const [status, list] of Object.entries(byStatus)) {
+                    const badge = columnBadges[status];
+                    if (badge) badge.textContent = list.length;
+
+                    list.forEach(task => {
+                        const card = document.createElement('div');
+                        card.className = 'task-card';
+                        card.dataset.taskId = task._id;
+
+                        const priorityKey = String(task.priority || '').toLowerCase();
+                        card.innerHTML = `
+                            <h4>${escapeHtml(task.title)}</h4>
+                            <p>${escapeHtml(task.description || '')}</p>
+                            <div class="task-meta">
+                                <span class="badge priority-${priorityKey}">${escapeHtml(task.priority || '')}</span>
+                            </div>
+                            <div style="display:flex; gap:8px; margin-top:12px;">
+                                <button class="btn btn-ghost" style="padding:8px 10px; border:1px solid var(--border); border-radius:10px;" data-action="move" data-status="TODO">To Do</button>
+                                <button class="btn btn-ghost" style="padding:8px 10px; border:1px solid var(--border); border-radius:10px;" data-action="move" data-status="IN_PROGRESS">Doing</button>
+                                <button class="btn btn-ghost" style="padding:8px 10px; border:1px solid var(--border); border-radius:10px;" data-action="move" data-status="DONE">Done</button>
+                                <button class="btn btn-ghost" style="padding:8px 10px; border:1px solid var(--border); border-radius:10px; color:#ef4444;" data-action="delete">Delete</button>
+                            </div>
+                        `;
+
+                        containers[status].appendChild(card);
+                    });
+                }
+            };
+
+            const fetchTasks = async () => {
+                const response = await fetch(`${API_BASE}/api/tasks`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!response.ok) {
+                    const msg = await response.text();
+                    throw new Error(msg || 'Failed to fetch tasks');
+                }
+                return response.json();
+            };
+
+            const createTask = async (payload) => {
+                const response = await fetch(`${API_BASE}/api/tasks`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || 'Failed to create task');
+                return data;
+            };
+
+            const updateTaskStatus = async (taskId, status) => {
+                const response = await fetch(`${API_BASE}/api/tasks/${taskId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status })
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || 'Failed to update task');
+                return data;
+            };
+
+            const deleteTask = async (taskId) => {
+                const response = await fetch(`${API_BASE}/api/tasks/${taskId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || 'Failed to delete task');
+                return data;
+            };
+
+            const taskForm = document.getElementById('taskForm');
+            taskForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                try {
+                    const status = document.getElementById('taskStatus').value;
+                    const title = document.getElementById('taskTitle').value.trim();
+                    const description = document.getElementById('taskDesc').value.trim();
+                    const priority = document.getElementById('taskPriority').value;
+
+                    await createTask({ status, title, description, priority });
+
+                    taskModal.style.display = 'none';
+                    taskForm.reset();
+                    document.getElementById('taskStatus').value = status;
+
+                    const updated = await fetchTasks();
+                    renderTasks(updated);
+                } catch (err) {
+                    alert(err.message || 'Failed to create task');
+                }
+            });
+
+            document.querySelector('main.board-container').addEventListener('click', async (e) => {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+
+                const card = e.target.closest('.task-card');
+                if (!card) return;
+
+                const taskId = card.dataset.taskId;
+                const action = btn.dataset.action;
+
+                if (action === 'move') {
+                    const status = btn.dataset.status;
+                    try {
+                        await updateTaskStatus(taskId, status);
+                        const updated = await fetchTasks();
+                        renderTasks(updated);
+                    } catch (err) {
+                        alert(err.message || 'Failed to update task');
+                    }
+                }
+
+                if (action === 'delete') {
+                    try {
+                        const ok = confirm('Delete this task?');
+                        if (!ok) return;
+                        await deleteTask(taskId);
+                        const updated = await fetchTasks();
+                        renderTasks(updated);
+                    } catch (err) {
+                        alert(err.message || 'Failed to delete task');
+                    }
+                }
+            });
+
+            (async () => {
+                try {
+                    const tasks = await fetchTasks();
+                    renderTasks(tasks);
+                } catch (err) {
+                    console.error(err);
+                    alert(err.message || 'Failed to load tasks');
+                }
+            })();
+
+        });
+    </script>
+</body>
+</html>
