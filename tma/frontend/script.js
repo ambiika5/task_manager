@@ -1,7 +1,7 @@
-const isLocalFrontend = ['localhost', '127.0.0.1'].includes(window.location.hostname) || window.location.protocol === 'file:';
+const isLocalFrontend = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
 window.TASKFLOW_API_BASE = isLocalFrontend
-    ? 'http://127.0.0.1:8000'
+    ? window.location.origin
     : 'https://task-manager-m4ls.onrender.com';
 
 document.addEventListener('DOMContentLoaded', () => {
