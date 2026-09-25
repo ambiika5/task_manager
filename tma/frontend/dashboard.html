@@ -208,6 +208,7 @@
         </div>
     </div>
 
+    <script src="script.js"></script>
     <script>
         // Basic Dashboard Script
         document.addEventListener('DOMContentLoaded', () => {
@@ -237,7 +238,7 @@
 
             closeTaskModal.onclick = () => taskModal.style.display = 'none';
 
-            const API_BASE = 'http://127.0.0.1:8000';
+            const API_BASE = window.TASKFLOW_API_BASE;
 
 
             const containers = {
@@ -252,16 +253,8 @@
                 'DONE': document.querySelector('#done-col .column-header .badge'),
             };
 
-            const escapeHtml = (str) => String(str)
-                .replaceAll('&', '&amp;')
-                .replaceAll('<', '<')
-                .replaceAll('>', '>')
-                .replaceAll('"', '"')
-                .replaceAll("'", '&#039;');
-
-
             const renderTasks = (tasks) => {
-                Object.values(containers).forEach(c => c.innerHTML = '');
+                Object.values(containers).forEach(c => c.replaceChildren());
 
                 const byStatus = {
                     'TODO': [],
@@ -273,6 +266,21 @@
                     if (byStatus[t.status]) byStatus[t.status].push(t);
                 });
 
+                const allowedPriorities = ['LOW', 'MEDIUM', 'HIGH'];
+                const createActionButton = (label, action, status, color) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'btn btn-ghost';
+                    button.style.padding = '8px 10px';
+                    button.style.border = '1px solid var(--border)';
+                    button.style.borderRadius = '10px';
+                    if (color) button.style.color = color;
+                    button.dataset.action = action;
+                    if (status) button.dataset.status = status;
+                    button.textContent = label;
+                    return button;
+                };
+
                 for (const [status, list] of Object.entries(byStatus)) {
                     const badge = columnBadges[status];
                     if (badge) badge.textContent = list.length;
@@ -280,23 +288,35 @@
                     list.forEach(task => {
                         const card = document.createElement('div');
                         card.className = 'task-card';
-                        card.dataset.taskId = task._id;
+                        card.dataset.taskId = String(task._id ?? '');
 
-                        const priorityKey = String(task.priority || '').toLowerCase();
-                        card.innerHTML = `
-                            <h4>${escapeHtml(task.title)}</h4>
-                            <p>${escapeHtml(task.description || '')}</p>
-                            <div class="task-meta">
-                                <span class="badge priority-${priorityKey}">${escapeHtml(task.priority || '')}</span>
-                            </div>
-                            <div style="display:flex; gap:8px; margin-top:12px;">
-                                <button class="btn btn-ghost" style="padding:8px 10px; border:1px solid var(--border); border-radius:10px;" data-action="move" data-status="TODO">To Do</button>
-                                <button class="btn btn-ghost" style="padding:8px 10px; border:1px solid var(--border); border-radius:10px;" data-action="move" data-status="IN_PROGRESS">Doing</button>
-                                <button class="btn btn-ghost" style="padding:8px 10px; border:1px solid var(--border); border-radius:10px;" data-action="move" data-status="DONE">Done</button>
-                                <button class="btn btn-ghost" style="padding:8px 10px; border:1px solid var(--border); border-radius:10px; color:#ef4444;" data-action="delete">Delete</button>
-                            </div>
-                        `;
+                        const priority = String(task.priority ?? '').toUpperCase();
+                        const validPriority = allowedPriorities.includes(priority) ? priority : 'MEDIUM';
 
+                        const title = document.createElement('h4');
+                        title.textContent = String(task.title ?? '');
+
+                        const description = document.createElement('p');
+                        description.textContent = String(task.description ?? '');
+
+                        const meta = document.createElement('div');
+                        meta.className = 'task-meta';
+
+                        const priorityBadge = document.createElement('span');
+                        priorityBadge.className = `badge priority-${validPriority.toLowerCase()}`;
+                        priorityBadge.textContent = validPriority;
+                        meta.appendChild(priorityBadge);
+
+                        const actions = document.createElement('div');
+                        actions.style.cssText = 'display:flex; gap:8px; margin-top:12px;';
+                        actions.append(
+                            createActionButton('To Do', 'move', 'TODO'),
+                            createActionButton('Doing', 'move', 'IN_PROGRESS'),
+                            createActionButton('Done', 'move', 'DONE'),
+                            createActionButton('Delete', 'delete', undefined, '#ef4444')
+                        );
+
+                        card.append(title, description, meta, actions);
                         containers[status].appendChild(card);
                     });
                 }

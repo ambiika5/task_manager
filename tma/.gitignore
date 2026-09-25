@@ -1,0 +1,19 @@
+# Ignore node_modules and environment files
+node_modules/
+.env
+.env.*
+!node-backend/.env.example
+
+# Ignore logs
+*.log
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore unrelated sibling projects (avoid accidental commits)
+../portfolio-website/
+../portfolio/
+../student-hub/
+../task-management-app/
+../website2/

@@ -11,7 +11,12 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
-const JWT_SECRET = process.env.JWT_SECRET || 'node_taskflow_secret';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+    console.error('Missing JWT secret. Set JWT_SECRET in the environment');
+    process.exit(1);
+}
 
 // Middleware
 app.use(express.json());
@@ -106,38 +111,96 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+const sendTaskError = (err, res) => {
+    if (err && (err.name === 'CastError' || err.name === 'ValidationError')) {
+        return res.status(400).json({ message: 'Invalid task data' });
+    }
+
+    console.error('Task operation error:', err);
+    return res.status(500).json({ message: 'Server error' });
+};
+
+const isObjectRequest = (body) => Boolean(body && typeof body === 'object' && !Array.isArray(body));
+
 app.get('/api/tasks', authenticateToken, async (req, res) => {
-    const tasks = await Task.find({ userId: req.user.id }).sort({ createdAt: -1 });
-    res.json(tasks);
+    try {
+        const tasks = await Task.find({ userId: req.user.id }).sort({ createdAt: -1 });
+        return res.json(tasks);
+    } catch (err) {
+        return sendTaskError(err, res);
+    }
 });
 
 app.post('/api/tasks', authenticateToken, async (req, res) => {
-    const task = new Task({ ...req.body, userId: req.user.id });
-    await task.save();
-    res.status(201).json(task);
+    try {
+        if (!isObjectRequest(req.body)) {
+            return res.status(400).json({ message: 'Invalid task data' });
+        }
+
+        const { title, description, status, priority, dueDate } = req.body;
+        const taskData = { userId: req.user.id, title, description };
+
+        if (status !== undefined) taskData.status = status;
+        if (priority !== undefined) taskData.priority = priority;
+        if (dueDate !== undefined) taskData.dueDate = dueDate;
+
+        const task = new Task(taskData);
+        await task.save();
+        return res.status(201).json(task);
+    } catch (err) {
+        return sendTaskError(err, res);
+    }
 });
 
 app.patch('/api/tasks/:id', authenticateToken, async (req, res) => {
-    const allowed = ['title', 'description', 'status', 'priority', 'dueDate'];
-    const updates = {};
-    for (const key of allowed) {
-        if (Object.prototype.hasOwnProperty.call(req.body, key)) updates[key] = req.body[key];
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return res.status(400).json({ message: 'Invalid task id' });
+        }
+
+        if (!isObjectRequest(req.body)) {
+            return res.status(400).json({ message: 'Invalid task data' });
+        }
+
+        const allowed = ['title', 'description', 'status', 'priority', 'dueDate'];
+        const updates = {};
+        for (const key of allowed) {
+            if (Object.prototype.hasOwnProperty.call(req.body, key)) updates[key] = req.body[key];
+        }
+
+        const task = await Task.findOneAndUpdate(
+            { _id: req.params.id, userId: req.user.id },
+            updates,
+            { new: true, runValidators: true }
+        );
+
+        if (!task) return res.status(404).json({ message: 'Task not found' });
+        return res.json(task);
+    } catch (err) {
+        return sendTaskError(err, res);
     }
-
-    const task = await Task.findOneAndUpdate(
-        { _id: req.params.id, userId: req.user.id },
-        updates,
-        { new: true }
-    );
-
-    if (!task) return res.status(404).json({ message: 'Task not found' });
-    return res.json(task);
 });
 
 app.delete('/api/tasks/:id', authenticateToken, async (req, res) => {
-    const result = await Task.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
-    if (!result) return res.status(404).json({ message: 'Task not found' });
-    return res.json({ success: true });
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return res.status(400).json({ message: 'Invalid task id' });
+        }
+
+        const result = await Task.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+        if (!result) return res.status(404).json({ message: 'Task not found' });
+        return res.json({ success: true });
+    } catch (err) {
+        return sendTaskError(err, res);
+    }
+});
+
+app.use((err, req, res, next) => {
+    if (err && err.type === 'entity.parse.failed') {
+        return res.status(400).json({ message: 'Invalid JSON' });
+    }
+
+    next(err);
 });
 
 

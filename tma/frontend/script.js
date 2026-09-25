@@ -1,7 +1,14 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const API_BASE = 'https://task-manager-m4ls.onrender.com';
+const isLocalFrontend = ['localhost', '127.0.0.1'].includes(window.location.hostname) || window.location.protocol === 'file:';
 
+window.TASKFLOW_API_BASE = isLocalFrontend
+    ? 'http://127.0.0.1:8000'
+    : 'https://task-manager-m4ls.onrender.com';
+
+document.addEventListener('DOMContentLoaded', () => {
+    const API_BASE = window.TASKFLOW_API_BASE;
     const authModal = document.getElementById('authModal');
+    if (!authModal) return;
+
     const loginBtn = document.getElementById('loginBtn');
     const signupBtn = document.getElementById('signupBtn');
     const closeModal = document.querySelector('.close-modal');
